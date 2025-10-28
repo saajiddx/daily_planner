@@ -1,0 +1,288 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>My Day Organizer</title>
+
+  <style>
+    body {
+      font-family: "Poppins", sans-serif;
+      background: #f0f7f6;
+      margin: 0;
+      padding: 30px;
+      color: #333;
+    }
+
+    .wrapper {
+      max-width: 1000px;
+      margin: auto;
+      background: #ffffff;
+      border-radius: 12px;
+      box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+      overflow: hidden;
+      padding: 25px;
+    }
+
+    header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      border-bottom: 1px solid #e0e0e0;
+      padding-bottom: 10px;
+      margin-bottom: 20px;
+    }
+
+    header h2 {
+      margin: 0;
+      color: #006d77;
+    }
+
+    .date-tools {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+
+    input[type="date"] {
+      padding: 6px 10px;
+      border-radius: 8px;
+      border: 1px solid #ccc;
+    }
+
+    button {
+      border: none;
+      padding: 7px 14px;
+      border-radius: 8px;
+      color: white;
+      cursor: pointer;
+      transition: 0.3s;
+    }
+
+    .save { background-color: #219ebc; }
+    .load { background-color: #8ecae6; color: #073b4c; }
+    .clear { background-color: #e63946; }
+
+    button:hover {
+      opacity: 0.85;
+    }
+
+    .main {
+      display: grid;
+      grid-template-columns: 2fr 1.5fr;
+      gap: 20px;
+    }
+
+    .schedule {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      max-height: 480px;
+      overflow-y: auto;
+      padding-right: 10px;
+    }
+
+    .time-box {
+      display: flex;
+      background: #edf6f9;
+      border-radius: 10px;
+      padding: 8px 12px;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .time {
+      font-weight: 600;
+      color: #006d77;
+      width: 60px;
+    }
+
+    .activity {
+      flex: 1;
+      border: none;
+      outline: none;
+      background: transparent;
+      padding: 6px 8px;
+      font-size: 14px;
+    }
+
+    .activity::placeholder {
+      color: #888;
+    }
+
+    .side {
+      display: flex;
+      flex-direction: column;
+      gap: 15px;
+    }
+
+    textarea, input[type="text"] {
+      width: 100%;
+      border: 1px solid #ccc;
+      border-radius: 10px;
+      padding: 8px;
+      font-family: inherit;
+      font-size: 14px;
+    }
+
+    .todo {
+      background: #f7fcfc;
+      padding: 10px;
+      border-radius: 10px;
+    }
+
+    .todo ul {
+      padding-left: 18px;
+      margin: 5px 0 0;
+    }
+
+    .bottom {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-top: 15px;
+      flex-wrap: wrap;
+    }
+
+    .mood, .water {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .mood span, .water span {
+      font-size: 20px;
+      cursor: pointer;
+    }
+
+    @media (max-width: 768px) {
+      .main {
+        grid-template-columns: 1fr;
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <div class="wrapper">
+    <header>
+      <h2>My Day Organizer</h2>
+      <div class="date-tools">
+        <input type="date" id="date" />
+        <button class="save">Save</button>
+        <button class="load">Load</button>
+        <button class="clear">Clear</button>
+      </div>
+    </header>
+
+    <div class="main">
+      <div class="schedule" id="schedule"></div>
+
+      <div class="side">
+        <div>
+          <h4>Top Focus</h4>
+          <textarea id="focus" placeholder="Write your main goals..."></textarea>
+        </div>
+
+        <div class="todo">
+          <h4>Tasks for Today</h4>
+          <div style="display:flex; gap:5px;">
+            <input type="text" id="todoInput" placeholder="Add a new task">
+            <button id="addTodo" style="background:#219ebc;">Add</button>
+          </div>
+          <ul id="todoList"></ul>
+        </div>
+
+        <div>
+          <h4>Quick Notes</h4>
+          <textarea id="notes" placeholder="Write something..."></textarea>
+        </div>
+      </div>
+    </div>
+
+    <div class="bottom">
+      <div class="water">
+        <strong>Water:</strong>
+        <span>💧</span><span>💧</span><span>💧</span><span>💧</span><span>💧</span><span>💧</span><span>💧</span><span>💧</span>
+      </div>
+
+      <div class="mood">
+        <strong>Mood:</strong>
+        <span>😀</span><span>😊</span><span>😐</span><span>😞</span><span>😴</span>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const scheduleContainer = document.getElementById('schedule');
+    const hours = Array.from({ length: 17 }, (_, i) => i + 7); // 07:00 - 23:00
+
+    hours.forEach(hour => {
+      const time = hour.toString().padStart(2, '0') + ':00';
+      const div = document.createElement('div');
+      div.className = 'time-box';
+      div.innerHTML = `
+        <div class="time">${time}</div>
+        <input class="activity" type="text" placeholder="Your plan at ${time}">
+      `;
+      scheduleContainer.appendChild(div);
+    });
+
+    const saveBtn = document.querySelector('.save');
+    const loadBtn = document.querySelector('.load');
+    const clearBtn = document.querySelector('.clear');
+    const dateInput = document.getElementById('date');
+
+    saveBtn.onclick = () => {
+      const date = dateInput.value;
+      if (!date) return alert("Please choose a date first.");
+
+      const data = {
+        activities: Array.from(document.querySelectorAll('.activity')).map(a => a.value),
+        focus: document.getElementById('focus').value,
+        notes: document.getElementById('notes').value,
+        todos: Array.from(document.querySelectorAll('#todoList li')).map(li => li.textContent)
+      };
+      localStorage.setItem(`organizer-${date}`, JSON.stringify(data));
+      alert("Your day has been saved!");
+    };
+
+    loadBtn.onclick = () => {
+      const date = dateInput.value;
+      if (!date) return alert("Please choose a date first.");
+      const saved = localStorage.getItem(`organizer-${date}`);
+      if (!saved) return alert("No saved plan found.");
+
+      const data = JSON.parse(saved);
+      document.querySelectorAll('.activity').forEach((a, i) => a.value = data.activities[i] || '');
+      document.getElementById('focus').value = data.focus || '';
+      document.getElementById('notes').value = data.notes || '';
+      const list = document.getElementById('todoList');
+      list.innerHTML = '';
+      (data.todos || []).forEach(todo => {
+        const li = document.createElement('li');
+        li.textContent = todo;
+        list.appendChild(li);
+      });
+    };
+
+    clearBtn.onclick = () => {
+      document.querySelectorAll('.activity').forEach(a => a.value = '');
+      document.getElementById('focus').value = '';
+      document.getElementById('notes').value = '';
+      document.getElementById('todoList').innerHTML = '';
+    };
+
+    document.getElementById('addTodo').onclick = () => {
+      const input = document.getElementById('todoInput');
+      if (input.value.trim() === '') return;
+      const li = document.createElement('li');
+      li.textContent = input.value;
+      document.getElementById('todoList').appendChild(li);
+      input.value = '';
+    };
+  </script>
+</body>
+</html>
